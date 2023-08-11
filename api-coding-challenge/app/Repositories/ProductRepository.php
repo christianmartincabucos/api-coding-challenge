@@ -20,9 +20,9 @@ class ProductRepository
         return $this->product::create($data);
     }
 
-    public function update($id, $data) {
+    public function updateData($id, $data) {
         $product = $this->product::findOrFail($id);
-        return $product::update($data);
+        return $product->update($data);
     }
 
     public function getById($id) {
@@ -30,6 +30,6 @@ class ProductRepository
     }
 
     public function delete($id) {
-        return $this->product::delete($id);
+        return $this->product::destroy($id);
     }
 }
