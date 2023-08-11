@@ -31,18 +31,31 @@ class ProductController extends Controller
             ]);
         }
     }
-    public function uplaodPhoto($photo, $productName) {
-        $fileName = $productName.time();
+    public function uploadPhoto($photoData, $productName) {
+        $imageMime = explode(';', $photoData)[0];
+        $imageMime = str_replace('data:image/', '', $imageMime);
+        $image = str_replace("data:image/$imageMime;base64", '', $photoData);        
+        $image =  base64_decode($image);
+        $fileName = $productName.'-'.time().'.png';
         $filepath = public_path('storage/products/' . $fileName);
-        file_get_contents($filepath, $photo);
+        file_put_contents($filepath, $image);
 
         return $fileName;
     }
     public function store(Request $request)
     {
         try {
-            $this->uplaodPhoto($request->photo, $request->name);
-            $product = $this->productRepository->create($request->all());
+            $request->validate([
+                'name' => 'required|string',
+                'description' => 'required|string',
+                'price' => 'required',
+            ]);
+            if ($request->input('photo')) {
+                $fileName = $this->uploadPhoto($request->input('photo'), $request->input('name'));
+                $data = $request->all();
+                $data['photo'] = $fileName;
+            }
+            $product = $this->productRepository->create($data);
 
             return response()->json([
                 'data' => $product,
@@ -89,7 +102,18 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $product = $this->productRepository->update($id, $request->all());
+            $request->validate([
+                'name' => 'required|string',
+                'description' => 'required|string',
+                'price' => 'required',
+            ]);
+            $data = $request->all();
+            if ($request->input('photo')) {
+                $fileName = $this->uploadPhoto($request->input('photo'), $request->input('name'));
+                $data = $request->all();
+                $data['photo'] = $fileName;
+            }
+            $product = $this->productRepository->updateData($id, $data);
 
             return response()->json([
                 'data' => $product,
